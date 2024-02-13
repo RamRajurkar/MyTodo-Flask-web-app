@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>About Us - MyTodo</title>
+    <!-- Add your CSS links here -->
+    <style>
+      body {
+          font-family: 'Arial', sans-serif;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          background-color: #f4f4f4;
+          color: #333;
+      }
+
+      header {
+          background-color: #3498db;
+          color: #fff;
+          text-align: center;
+          padding: 20px 0;
+          border-bottom: 3px solid #2980b9;
+      }
+
+      .enlarged-logo {
+          text-align: center;
+          margin-top: 20px;
+          animation: fadeIn 1s ease-out;
+      }
+
+      .enlarged-logo img {
+          width: 120px;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      section {
+          max-width: 800px;
+          margin: 20px auto;
+          padding: 20px;
+          text-align: justify;
+          background-color: #fff;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+          animation: slideInUp 1s ease-out;
+      }
+
+      h2 {
+          color: #3498db;
+          border-bottom: 2px solid #3498db;
+          padding-bottom: 10px;
+          margin-bottom: 20px;
+      }
+
+      p {
+          line-height: 1.6;
+      }
+
+      ol {
+          margin-bottom: 20px;
+      }
+
+      ul {
+          list-style: none;
+          padding: 0;
+      }
+
+      li {
+          margin-bottom: 8px;
+      }
+
+      .social-links {
+          margin-top: 20px;
+          text-align: center;
+      }
+
+      .social-links a {
+          font-size: 24px;
+          margin-right: 20px;
+          color: #3498db;
+          text-decoration: none;
+          transition: color 0.3s ease;
+      }
+
+      .social-links a:hover {
+          color: #2980b9;
+      }
+
+      footer {
+          text-align: center;
+          padding: 10px;
+          background-color: #3498db;
+          color: #fff;
+          position: fixed;
+          bottom: 0;
+          width: 100%;
+          animation: fadeInUp 1s ease-out;
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+      }
+
+      @keyframes slideInUp {
+          from {
+              transform: translateY(20px);
+              opacity: 0;
+          }
+          to {
+              transform: translateY(0);
+              opacity: 1;
+          }
+      }
+
+      @keyframes fadeInUp {
+          from {
+              transform: translateY(20px);
+              opacity: 0;
+          }
+          to {
+              transform: translateY(0);
+              opacity: 1;
+          }
+      }
+  </style>
+    <link rel="stylesheet" href="path/to/your/styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="enlarged-logo">
+            <img src="path/to/your/logo.png" alt="MyTodo Logo">
+        </div>
+        <h1>About MyTodo</h1>
+    </header>
+
+    <section class="about-content">
+        <h2>Welcome to MyTodo</h2>
+        <p>
+            MyTodo is a simple and efficient todo app designed to help you manage your tasks with ease.
+            Whether you're organizing your daily activities or planning long-term projects, MyTodo has you covered.
+        </p>
+
+        <h2>How It Works</h2>
+        <p>
+            MyTodo provides a user-friendly interface for adding, updating, and deleting tasks. You can stay
+            organized by categorizing your todos and tracking them with a timestamp.
+        </p>
+
+        <h2>Technologies Used</h2>
+        <p>
+            MyTodo is built using modern web technologies to ensure a seamless and responsive user experience.
+            The technologies include HTML, CSS, JavaScript, Flask (a Python web framework), and MongoDB for data storage.
+        </p>
+
+        <h2>About the Developer</h2>
+        <p>
+            MyTodo is crafted with passion by Ram Rajurkar, a dedicated web developer with a vision to simplify
+            task management. With a focus on user experience and clean code, Ram ensures that MyTodo meets
+            the highest standards of usability and functionality.
+        </p>
+
+        <h2>Contact the Developer</h2>
+        <p>
+            Connect with Ram Rajurkar for any queries, feedback, or collaboration opportunities:
+        </p>
+
+        <ul>
+            <li><strong>Email:</strong> <a href="mailto:ramrajurkar@example.com">ramrajurkar@example.com</a></li>
+            <li><strong>GitHub:</strong> <a href="https://github.com/ramrajurkar" target="_blank">github.com/ramrajurkar</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/ramrajurkar" target="_blank">linkedin.com/in/ramrajurkar</a></li>
+            <li><strong>Portfolio:</strong> <a href="https://ramrajurkar.com" target="_blank">ramrajurkar.com</a></li>
+        </ul>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 MyTodo. Developed by Ram Rajurkar</p>
+        <!-- Add your social media icons and links here -->
+        <div class="social-media-icons">
+            <a href="https://www.instagram.com/ramrajurkar" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="https://github.com/ramrajurkar" target="_blank"><i class="fab fa-github"></i></a>
+            <a href="https://www.linkedin.com/in/ramrajurkar" target="_blank"><i class="fab fa-linkedin"></i></a>
+            <!-- Add more social media icons as needed -->
+        </div>
+    </footer>
+
+    <!-- Add your JavaScript links here if needed -->
+    <script src="path/to/your/script.js"></script>
+</body>
+</html>

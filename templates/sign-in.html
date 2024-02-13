@@ -1,0 +1,197 @@
+
+ 
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign Up - Login Form</title> 
+    
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+   
+    <style>
+            .navbar-nav .nav-link:hover {
+        color: #fff; /* Change the text color on hover */
+        background-color: #698098; /* Change the background color on hover */
+        border-radius: 20px;
+    }
+
+    /* Add active effect to currently active tab */
+    .navbar-nav .nav-item.active .nav-link {
+        color: #fff;
+        background-color: #455463;
+    }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            color: #495057;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .form-header {
+            text-align: center;
+            padding: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .form-header h2 {
+            margin: 0;
+        }
+
+        .form-header p {
+            margin: 10px 0 0;
+            font-size: 14px;
+        }
+
+        .form-content {
+            padding: 20px;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        label {
+            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        input[type="radio"]:checked+label {
+            background-color: #0056b3;
+            border: 1px solid #0056b3;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input,
+        button {
+            margin-bottom: 15px;
+            
+            
+            padding: 12px;
+            border: 1px solid #007bff;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .form-container {
+                border-radius: 0;
+            }
+        }
+        </style>
+        
+
+</head>
+
+<body>
+
+        
+
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Welcome</h2>
+                <p>Please sign up or log in to continue</p>
+            </div>
+
+            <div class="form-content">
+                <input type="radio" id="signupRadio" name="formType" checked>
+                <label for="signupRadio">Sign up</label>
+
+                <input type="radio" id="loginRadio" name="formType">
+                <label for="loginRadio">Login</label>
+
+                <div class="signup-form">
+                    <form method="POST" action="{{ url_for('signup') }}">
+                        <input type="text" name="username" placeholder="Username" style="margin-top: 20px;" required>
+                        <input type="email" name="email" placeholder="Email" required>
+                        <input type="password" name="password" placeholder="Password" required>
+                        <button type="submit">Sign up</button>
+                    </form>
+                </div>
+
+                <div class="login-form" style="display: none;">
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <input type="text" name="username" placeholder="Username"  style="margin-top: 20px;" required>
+                        <input type="password" name="pswd" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                    {% if error_message %}
+                    <p class="error">{{error_message}}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const signupRadio = document.getElementById('signupRadio');
+            const loginRadio = document.getElementById('loginRadio');
+            const signupForm = document.querySelector('.signup-form');
+            const loginForm = document.querySelector('.login-form');
+
+            signupRadio.addEventListener('change', function () {
+                signupForm.style.display = 'block';
+                loginForm.style.display = 'none';
+            });
+
+            loginRadio.addEventListener('change', function () {
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+        });
+    </script>
+
+</body>
+
+</html>

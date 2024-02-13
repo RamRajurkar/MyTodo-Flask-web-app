@@ -1,0 +1,867 @@
+{{ url_for('signup') }}
+{{ url_for('login') }}
+
+# from collections import UserDict
+from bson import ObjectId
+from flask import Flask, flash, render_template, request, redirect, url_for, jsonify, session
+from flask_pymongo import PyMongo
+from datetime import datetime
+import secrets
+from werkzeug.security import check_password_hash, generate_password_hash
+
+
+app = Flask(__name__)
+app.secret_key = secrets.token_hex(16) 
+app.config['MONGO_URI'] = 'mongodb://localhost:27017/Todo_App_Database'
+mongo = PyMongo(app)
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if 'user' in session:
+        current_user = session['user']['username']
+        print(current_user)
+        user_collection = mongo.db[current_user]
+
+        if request.method == 'POST':
+            todo_title = request.form.get('title')
+            todo_description = request.form.get('description')
+
+            user_collection.insert_one({'title': todo_title, 'description': todo_description})
+
+
+        todos_data = user_collection.find()
+        todos_count = user_collection.count_documents({})
+        user_details = mongo.db.user_details.find_one({'username': current_user})
+        print(user_details)
+
+        return render_template("index.html", todos=todos_data, todos_count=todos_count, user_details=user_details)
+    else:
+        return render_template("index.html", todos=None, todos_count=0)
+# def index():
+#     # current date-time
+#     current_datetime = datetime.now()
+#     todo_date_time = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    
+#     if request.method == 'POST':
+#         # Retrieve form data
+#         todo_title = request.form.get('title')
+#         todo_description = request.form.get('description')
+
+#         # Insert data into MongoDB
+#         todos = mongo.db.todos
+#         todos.insert_one({'title': todo_title, 'description': todo_description, 'date_time': todo_date_time})
+    
+#     # Retrieve all todos for the table
+#     todos_data = mongo.db.todos.find()
+#     todos_count = mongo.db.todos.count_documents({})
+    
+#     print(todo_date_time)
+#     print(todos_count)
+    
+#     return render_template("index.html", todos=todos_data, todos_count=todos_count)
+
+@app.route("/delete/<string:id>")
+def delete_todo(id):
+    try:
+        todo_id = ObjectId(id)
+        mongo.db.todos.delete_one({"_id": todo_id})
+        return redirect(url_for("index"))
+    except Exception as e:
+        print(f"Error deleting todo: {e}")
+        flash("Error deleting todo", "error")
+        return redirect(url_for("index"))
+    
+
+@app.route("/update/<string:id>", methods=["GET", "POST"])
+def update_todo(id):
+    try:
+        # Find the todo with the specified id
+        todo = mongo.db.todos.find_one({"_id": ObjectId(id)})
+
+        if request.method == "POST":
+            # Update the todo in the database
+            mongo.db.todos.update_one(
+                {"_id": ObjectId(id)},
+                {
+                    "$set": {
+                        "title": request.form['title'],
+                        "description": request.form['description']
+                    }
+                }
+            )
+            flash("Task Updated Successfully!", "success")
+            return redirect(url_for("index"))
+
+        return render_template("update.html", todo=todo)
+    except Exception as e:
+        print(f"Error updating todo: {e}")
+        flash("Error updating todo", "error")
+        return redirect(url_for("index"))
+
+
+existing_usernames = []
+@app.route('/signup', methods=['GET','POST'])
+def signup():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = generate_password_hash(request.form.get('password'))
+
+        user_details = mongo.db.user_details
+        user_details.insert_one({'username': username, 'password': password, 'email': email})
+
+        if check_username_uniqueness(username):
+            existing_usernames.append(username)
+            session['user'] = {'username': username}
+            mongo.db.create_collection(username)  # Create a new collection for the user
+            return redirect(url_for("index"))
+            return jsonify({'status': 'success', 'message': 'Signup successful!'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Username already exists.'})
+
+    return render_template("sign-in.html")
+
+def check_username_uniqueness(username):
+    return username not in existing_usernames
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('pswd')
+
+        user_details = mongo.db.user_details
+        user_data = user_details.find_one({'username': username})
+        print(user_data)
+
+        if user_data and check_password_hash(user_data['password'], password):
+            session['user'] = {'username': username}
+            return redirect(url_for("index"))
+            return jsonify({'status': 'success', 'message': 'Login successful!'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Invalid username or password.'})
+
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            color: #495057;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .form-header {
+            text-align: center;
+            padding: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .form-header h2 {
+            margin: 0;
+        }
+
+        .form-header p {
+            margin: 10px 0 0;
+            font-size: 14px;
+        }
+
+        .form-content {
+            padding: 20px;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        label {
+            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        input[type="radio"]:checked+label {
+            background-color: #0056b3;
+            border: 1px solid #0056b3;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input,
+        button {
+            margin-bottom: 15px;
+            
+            
+            padding: 12px;
+            border: 1px solid #007bff;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .form-container {
+                border-radius: 0;
+            }
+        }
+
+
+
+
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #0f0f0f;
+            color: #495057;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            color: #495057;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .form-header {
+            text-align: center;
+            padding: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .form-header h2 {
+            margin: 0;
+        }
+
+        .form-header p {
+            margin: 10px 0 0;
+            font-size: 14px;
+        }
+
+        .form-content {
+            padding: 20px;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        label {
+            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        input[type="radio"]:checked+label {
+            background-color: #0056b3;
+            border: 1px solid #0056b3;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input,
+        button {
+            margin-bottom: 15px;
+            
+            
+            padding: 12px;
+            border: 1px solid #007bff;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .form-container {
+                border-radius: 0;
+            }
+        }
+
+
+
+        -------------------------------------------------------------------------
+
+        <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.11.2/css/all.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" />
+    <title>Sign Up - Login Form</title>
+    <style>
+        /* Reset some default styles */
+        body,
+        h1,
+        h2,
+        p,
+        ul,
+        li {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: white;
+            color: #495057;
+        }
+
+        .nav {
+            width: 100%;
+            height: 65px;
+            position: fixed;
+            line-height: 65px;
+            text-align: center;
+            background-color: #4a4747;
+            z-index: 1000;
+        }
+
+        .nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+        }
+
+        .nav .logo a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 2.5rem;
+            padding-left: 1rem;
+        }
+
+        .nav .main_list ul {
+            list-style: none;
+            display: flex;
+        }
+
+        .nav .main_list ul li {
+            padding-right: 3rem;
+        }
+
+        .nav .main_list ul li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 2.4rem;
+        }
+
+        .navTrigger {
+            cursor: pointer;
+            width: 30px;
+            height: 25px;
+            margin: auto;
+            position: absolute;
+            right: 30px;
+            top: 0;
+            bottom: 0;
+            z-index: 1001;
+            display: none;
+        }
+
+        .navTrigger i {
+            background-color: #fff;
+            border-radius: 2px;
+            content: '';
+            display: block;
+            width: 100%;
+            height: 4px;
+        }
+
+        .navTrigger i:nth-child(1) {
+            -webkit-animation: outT 0.8s backwards;
+            animation: outT 0.8s backwards;
+            -webkit-animation-direction: reverse;
+            animation-direction: reverse;
+        }
+
+        .navTrigger i:nth-child(2) {
+            margin: 5px 0;
+            -webkit-animation: outM 0.8s backwards;
+            animation: outM 0.8s backwards;
+            -webkit-animation-direction: reverse;
+            animation-direction: reverse;
+        }
+
+        .navTrigger i:nth-child(3) {
+            -webkit-animation: outBtm 0.8s backwards;
+            animation: outBtm 0.8s backwards;
+            -webkit-animation-direction: reverse;
+            animation-direction: reverse;
+        }
+
+        .navTrigger.active i:nth-child(1) {
+            -webkit-animation: inT 0.8s forwards;
+            animation: inT 0.8s forwards;
+        }
+
+        .navTrigger.active i:nth-child(2) {
+            -webkit-animation: inM 0.8s forwards;
+            animation: inM 0.8s forwards;
+        }
+
+        .navTrigger.active i:nth-child(3) {
+            -webkit-animation: inBtm 0.8s forwards;
+            animation: inBtm 0.8s forwards;
+        }
+
+        @media screen and (max-width: 768px) {
+            .navTrigger {
+                display: block;
+            }
+
+            .nav .main_list ul {
+                display: none;
+                position: fixed;
+                width: 100%;
+                flex-direction: column;
+                background-color: #111;
+                top: 65px;
+                left: 0;
+                text-align: center;
+            }
+
+            .nav .main_list ul.show_list {
+                display: flex;
+            }
+
+            .nav .main_list ul li {
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav .main_list ul li a {
+                font-size: 2rem;
+                padding: 20px;
+            }
+        }
+
+        @-webkit-keyframes inM {
+            50% {
+                -webkit-transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(45deg);
+            }
+        }
+
+        @keyframes inM {
+            50% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(45deg);
+            }
+        }
+
+        @-webkit-keyframes outM {
+            50% {
+                -webkit-transform: rotate(0deg);
+            }
+            100% {
+                -webkit-transform: rotate(45deg);
+            }
+        }
+
+        @keyframes outM {
+            50% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(45deg);
+            }
+        }
+
+        @-webkit-keyframes inT {
+            0% {
+                -webkit-transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                -webkit-transform: translateY(9px) rotate(0deg);
+            }
+            100% {
+                -webkit-transform: translateY(9px) rotate(135deg);
+            }
+        }
+
+        @keyframes inT {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(9px) rotate(0deg);
+            }
+            100% {
+                transform: translateY(9px) rotate(135deg);
+            }
+        }
+
+        @-webkit-keyframes outT {
+            0% {
+                -webkit-transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                -webkit-transform: translateY(9px) rotate(0deg);
+            }
+            100% {
+                -webkit-transform: translateY(9px) rotate(135deg);
+            }
+        }
+
+        @keyframes outT {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(9px) rotate(0deg);
+            }
+            100% {
+                transform: translateY(9px) rotate(135deg);
+            }
+        }
+
+        @-webkit-keyframes inBtm {
+            0% {
+                -webkit-transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                -webkit-transform: translateY(-9px) rotate(0deg);
+            }
+            100% {
+                -webkit-transform: translateY(-9px) rotate(135deg);
+            }
+        }
+
+        @keyframes inBtm {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-9px) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-9px) rotate(135deg);
+            }
+        }
+
+        @-webkit-keyframes outBtm {
+            0% {
+                -webkit-transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                -webkit-transform: translateY(-9px) rotate(0deg);
+            }
+            100% {
+                -webkit-transform: translateY(-9px) rotate(135deg);
+            }
+        }
+
+        @keyframes outBtm {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-9px) rotate(0deg);
+            }
+            100% {
+                transform: translateY(-9px) rotate(135deg);
+            }
+        }
+        /*  form css*/
+        /* body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background-color: #0f0f0f;
+            color: #495057;
+        } */
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .form-container {
+            background-color: #ffffff;
+            color: #495057;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .form-header {
+            text-align: center;
+            padding: 20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            background-color: #007bff;
+            color: #fff;
+        }
+
+        .form-header h2 {
+            margin: 0;
+        }
+
+        .form-header p {
+            margin: 10px 0 0;
+            font-size: 14px;
+        }
+
+        .form-content {
+            padding: 20px;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        label {
+            cursor: pointer;
+            padding: 10px;
+            text-align: center;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+        input[type="radio"]:checked+label {
+            background-color: #0056b3;
+            border: 1px solid #0056b3;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        input,
+        button {
+            margin-bottom: 15px;
+            
+            
+            padding: 12px;
+            border: 1px solid #007bff;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .form-container {
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="nav">
+        <div class="container">
+            <div class="logo">
+                <a href="#">Your Logo</a>
+            </div>
+            <div id="mainListDiv" class="main_list">
+                <ul class="navlinks">
+                    <li><a href="#">About</a></li>
+                    <li><a href="#">Portfolio</a></li>
+                    <li><a href="#">Services</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+            <span class="navTrigger">
+                <i></i>
+                <i></i>
+                <i></i>
+            </span>
+        </div>
+    </nav>
+      
+    <!-- Rest of your HTML content goes here -->
+
+    <div class="container">
+        <div class="form-container">
+            <div class="form-header">
+                <h2>Welcome</h2>
+                <p>Please sign up or log in to continue</p>
+            </div>
+
+            <div class="form-content">
+                <input type="radio" id="signupRadio" name="formType" checked>
+                <label for="signupRadio">Sign up</label>
+
+                <input type="radio" id="loginRadio" name="formType">
+                <label for="loginRadio">Login</label>
+
+                <div class="signup-form">
+                    <form method="POST" action="{{ url_for('signup') }}">
+                        <input type="text" name="username" placeholder="Username" style="margin-top: 20px;" required>
+                        <input type="email" name="email" placeholder="Email" required>
+                        <input type="password" name="password" placeholder="Password" required>
+                        <button type="submit">Sign up</button>
+                    </form>
+                </div>
+
+                <div class="login-form" style="display: none;">
+                    <form method="POST" action="{{ url_for('login') }}">
+                        <input type="text" name="username" placeholder="Username"  style="margin-top: 20px;" required>
+                        <input type="password" name="pswd" placeholder="Password" required>
+                        <button type="submit">Login</button>
+                    </form>
+                    {% if error_message %}
+                    <p class="error">{{error_message}}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $('.navTrigger').click(function () {
+    $(this).toggleClass('active');
+    console.log("Clicked menu");
+    $("#mainListDiv").toggleClass("show_list");
+    $("#mainListDiv").fadeIn();
+
+});
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const signupRadio = document.getElementById('signupRadio');
+            const loginRadio = document.getElementById('loginRadio');
+            const signupForm = document.querySelector('.signup-form');
+            const loginForm = document.querySelector('.login-form');
+
+            signupRadio.addEventListener('change', function () {
+                signupForm.style.display = 'block';
+                loginForm.style.display = 'none';
+            });
+
+            loginRadio.addEventListener('change', function () {
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+        });
+    </script>
+
+</body>
+
+</html>
