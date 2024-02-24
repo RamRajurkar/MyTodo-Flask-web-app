@@ -52,9 +52,6 @@ This is a simple Todo web application built using Flask and MongoDB.
 - **HTML/CSS:** Frontend design and styling.
 - **JavaScript:** Client-side interactivity and form validation.
 
-## Screenshots
-
-Include screenshots of your application here.
 
 ## Usage
 
