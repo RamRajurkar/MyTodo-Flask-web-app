@@ -16,7 +16,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 
-app.config['MONGO_URI'] = os.getenv('MONGO_URI')
+app.config['MONGO_URI'] = os.getenv('MONGO_URI') # Add your Mongodb Connection URI here
 mongo = PyMongo(app)
 
 current_datetime = datetime.now()
