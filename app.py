@@ -15,8 +15,6 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
-# app.config['MONGO_URI'] = 'mongodb://localhost:27017/Todo_App_Database'
-# app.config['MONGO_URI'] = mongodb_uri = 'mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net/Todo_App_Database'
 
 app.config['MONGO_URI'] = os.getenv('MONGO_URI')
 mongo = PyMongo(app)
