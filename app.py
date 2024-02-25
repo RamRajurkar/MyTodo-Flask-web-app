@@ -6,16 +6,19 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from datetime import datetime
 import secrets
+from dotenv import load_dotenv
+import os
 from werkzeug.security import check_password_hash, generate_password_hash
 
 
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)
 # app.config['MONGO_URI'] = 'mongodb://localhost:27017/Todo_App_Database'
-app.config['MONGO_URI'] = mongodb_uri = 'mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net/Todo_App_Database'
+# app.config['MONGO_URI'] = mongodb_uri = 'mongodb+srv://ramrajurkar2020:ramdb013@cluster0.xwifiky.mongodb.net/Todo_App_Database'
 
-# app.config['MONGO_URI'] = 'mongodb+srv://username:password@cluster0.xwifiky.mongodb.net/Todo_App_Database?retryWrites=true&w=majority&appName=Cluster0'
+app.config['MONGO_URI'] = os.getenv('MONGO_URI')
 mongo = PyMongo(app)
 
 current_datetime = datetime.now()
