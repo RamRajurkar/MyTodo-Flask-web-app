@@ -1,15 +1,11 @@
-# from collections import UserDict
 from bson import ObjectId
 from flask import Flask, flash, render_template, request, redirect, url_for, jsonify, session
 from flask_pymongo import PyMongo
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
 from datetime import datetime
 import secrets
 from dotenv import load_dotenv
 import os
 from werkzeug.security import check_password_hash, generate_password_hash
-
 
 load_dotenv()
 
@@ -19,17 +15,13 @@ app.secret_key = secrets.token_hex(16)
 app.config['MONGO_URI'] = os.getenv('MONGO_URI') # Add your Mongodb Connection URI here
 mongo = PyMongo(app)
 
-current_datetime = datetime.now()
-
-# Format and print the current date and time
-datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
 @app.route('/', methods=['GET', 'POST'])
 def get_started_page():
     if 'user' in session:
         return redirect(url_for('index'))  # Redirect to home page if user is already logged in
     else:
         return render_template("get_started.html")
+
 
 @app.route('/index', methods=['GET', 'POST'])
 def index():
@@ -41,7 +33,7 @@ def index():
             todo_title = request.form.get('title')
             todo_description = request.form.get('description')
 
-            user_collection.insert_one({'title': todo_title, 'description': todo_description, 'datetime': datetime})
+            user_collection.insert_one({'title': todo_title, 'description': todo_description, 'datetime': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
 
         todos_data = user_collection.find()
         todos_count = user_collection.count_documents({})
@@ -50,8 +42,6 @@ def index():
         return render_template("index.html", todos=todos_data, todos_count=todos_count, user_details=user_details)
     else:
         return redirect(url_for('signup'))  # Redirect to sign-up page if user is not logged in
-
-# Other routes remain the same...
 
 @app.route("/delete/<string:id>")
 def delete_todo(id):
@@ -88,9 +78,6 @@ def update_todo(id):
         flash("Error updating todo", "error")
         return redirect(url_for("index"))
 
-existing_usernames = []
-
-
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -99,20 +86,17 @@ def signup():
         password = generate_password_hash(request.form.get('password'))
 
         user_details = mongo.db.user_details
-        user_details.insert_one({'username': username, 'password': password, 'email': email, 'datetime': datetime})
-
-        if check_username_uniqueness(username):
-            existing_usernames.append(username)
-            session['user'] = {'username': username}
-            mongo.db.create_collection(username)
-            return redirect(url_for("index"))  # Redirect to home page after signup
-        else:
+        existing_user = user_details.find_one({'username': username})
+        if existing_user:
             return jsonify('Username already exists.')
+
+        user_details.insert_one({'username': username, 'password': password, 'email': email, 'datetime': datetime.now()})
+        
+        session['user'] = {'username': username}
+        mongo.db.create_collection(username)
+        return redirect(url_for("index"))  # Redirect to home page after signup
             
     return render_template("sign-in.html")
-
-def check_username_uniqueness(username):
-    return username not in existing_usernames
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -121,16 +105,12 @@ def login():
         password = request.form.get('pswd')
 
         user_details = mongo.db.user_details
-        user_login_details = mongo.db.user_login_details
-        user_login_details.insert_one({'username': username, 'logged-in-time': datetime})
         user_data = user_details.find_one({'username': username})
 
         if user_data and check_password_hash(user_data['password'], password):
             session['user'] = {'username': username}
             return redirect(url_for("index"))
         else:
-            # flash('Invalid username or password.', 'error')
-            # return render_template("alert.html")
             return jsonify("Invalid Username and password!")
 
     return render_template("sign-in.html")
