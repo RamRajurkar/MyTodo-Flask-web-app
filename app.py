@@ -6,6 +6,19 @@ import secrets
 from dotenv import load_dotenv
 import os
 from werkzeug.security import check_password_hash, generate_password_hash
+import pytz
+
+def get_current_datetime():
+    # Get the current datetime in UTC timezone
+    current_datetime_utc = datetime.now(pytz.utc)
+
+    # Convert to the desired timezone
+    timezone = pytz.timezone('Asia/Kolkata')
+    current_datetime_local = current_datetime_utc.astimezone(timezone)
+
+    formatted_datetime = current_datetime_local.strftime("%Y-%m-%d %H:%M:%S")
+    return formatted_datetime
+
 
 load_dotenv()
 
@@ -33,7 +46,7 @@ def index():
             todo_title = request.form.get('title')
             todo_description = request.form.get('description')
 
-            user_collection.insert_one({'title': todo_title, 'description': todo_description, 'datetime': datetime.now().strftime("%Y-%m-%d %H:%M:%S")})
+            user_collection.insert_one({'title': todo_title, 'description': todo_description, 'datetime': get_current_datetime()})
 
         todos_data = user_collection.find()
         todos_count = user_collection.count_documents({})
@@ -90,7 +103,7 @@ def signup():
         if existing_user:
             return jsonify('Username already exists.')
 
-        user_details.insert_one({'username': username, 'password': password, 'email': email, 'datetime': datetime.now()})
+        user_details.insert_one({'username': username, 'password': password, 'email': email, 'datetime': get_current_datetime()})
         
         session['user'] = {'username': username}
         mongo.db.create_collection(username)
