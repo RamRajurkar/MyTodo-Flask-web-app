@@ -1,6 +1,6 @@
 # Flask Todo App
 
-![Todo App](todo_app_screenshot.png)
+![Todo App](static\images\MyTodo-logo.png)
 
 ## Overview
 
