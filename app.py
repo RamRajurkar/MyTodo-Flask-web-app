@@ -25,9 +25,14 @@ current_datetime = datetime.now()
 datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
 @app.route('/', methods=['GET', 'POST'])
-def index():
+def get_started_page():
+    if 'user' in session:
+        return redirect(url_for('index'))  # Redirect to home page if user is already logged in
+    else:
+        return render_template("get_started.html")
 
-    
+@app.route('/index', methods=['GET', 'POST'])
+def index():
     if 'user' in session:
         current_user = session['user']['username']
         user_collection = mongo.db[current_user]
@@ -44,7 +49,9 @@ def index():
 
         return render_template("index.html", todos=todos_data, todos_count=todos_count, user_details=user_details)
     else:
-        return render_template("index.html", todos=None, todos_count=0)
+        return redirect(url_for('signup'))  # Redirect to sign-up page if user is not logged in
+
+# Other routes remain the same...
 
 @app.route("/delete/<string:id>")
 def delete_todo(id):
@@ -98,11 +105,10 @@ def signup():
             existing_usernames.append(username)
             session['user'] = {'username': username}
             mongo.db.create_collection(username)
-            return redirect(url_for("index"))
+            return redirect(url_for("index"))  # Redirect to home page after signup
         else:
             return jsonify('Username already exists.')
             
-
     return render_template("sign-in.html")
 
 def check_username_uniqueness(username):
@@ -135,7 +141,7 @@ def logout():
     # Clear the user session
     session.pop('user', None)
     flash('You have been logged out', 'info')
-    return redirect(url_for('index'))
+    return redirect(url_for('get_started_page'))
 
 @app.route('/about')
 def about():
